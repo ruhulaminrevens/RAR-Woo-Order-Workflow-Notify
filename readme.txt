@@ -7,7 +7,7 @@ Requires PHP: 7.4
 Stable tag: 1.4.0
 License: GPLv2 or later
 
-Professional WooCommerce order workflow and notification system for Nabiad.
+Professional WooCommerce order workflow and notification system.
 
 == Description ==
 
@@ -35,7 +35,7 @@ Highlights:
 2. Activate RAR Woo Order Workflow & Notify.
 3. Go to WooCommerce → Order Workflow.
 4. Keep Admin email blank to reuse WooCommerce New Order recipient, or set a dedicated address.
-5. Disable/remove the old WPCode workflow snippets only after one test order passes.
+5. Disable/remove old workflow snippets only after one test order passes.
 
 == Upgrade Notice ==
 
