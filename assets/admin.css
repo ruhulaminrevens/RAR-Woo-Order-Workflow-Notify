@@ -1,0 +1,105 @@
+/* RAR Woo Order Workflow & Notify — compact, high-clarity admin controls */
+.wc-action-button-rar-wow-processing,
+.wc-action-button-rar-wow-confirmed,
+.wc-action-button-rar-wow-shipped,
+.wc-action-button-rar-wow-completed,
+.wc-action-button-rar-wow-cancelled,
+.wc-action-button-rar-wow-returned {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    padding: 0 !important;
+    margin: 1px 2px !important;
+    border-radius: 9px !important;
+    border-width: 1px !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 16px 16px !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,.06) !important;
+    transition: transform .14s ease, box-shadow .14s ease, background-color .14s ease !important;
+}
+
+.wc-action-button-rar-wow-processing:hover,
+.wc-action-button-rar-wow-confirmed:hover,
+.wc-action-button-rar-wow-shipped:hover,
+.wc-action-button-rar-wow-completed:hover,
+.wc-action-button-rar-wow-cancelled:hover,
+.wc-action-button-rar-wow-returned:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(15,23,42,.12) !important;
+}
+
+.wc-action-button-rar-wow-processing::after,
+.wc-action-button-rar-wow-confirmed::after,
+.wc-action-button-rar-wow-shipped::after,
+.wc-action-button-rar-wow-completed::after,
+.wc-action-button-rar-wow-cancelled::after,
+.wc-action-button-rar-wow-returned::after {
+    content: none !important;
+}
+
+.wc-action-button-rar-wow-processing {
+    border-color:#bfdbfe !important;
+    background-color:#eff6ff !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8a2 2 0 0 0-2-2h-3.2l-1.4-2H9.6L8.2 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z'/%3E%3Cpath d='M8 12h8M12 9v6'/%3E%3C/svg%3E") !important;
+}
+
+.wc-action-button-rar-wow-confirmed {
+    border-color:#ddd6fe !important;
+    background-color:#f5f3ff !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 6 9-4 9 4-9 4z'/%3E%3Cpath d='m3 6 9 4 9-4v10l-9 4-9-4z'/%3E%3Cpath d='m8.5 13 2 2 5-5'/%3E%3C/svg%3E") !important;
+}
+
+.wc-action-button-rar-wow-shipped {
+    border-color:#fed7aa !important;
+    background-color:#fff7ed !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ea580c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7h11v10H3z'/%3E%3Cpath d='M14 10h4l3 3v4h-7z'/%3E%3Ccircle cx='7' cy='18' r='2'/%3E%3Ccircle cx='18' cy='18' r='2'/%3E%3Cpath d='M5 4h7'/%3E%3C/svg%3E") !important;
+}
+
+.wc-action-button-rar-wow-completed {
+    border-color:#bbf7d0 !important;
+    background-color:#f0fdf4 !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3Cpath d='M4 4h16v16H4z' opacity='.35'/%3E%3C/svg%3E") !important;
+}
+
+.wc-action-button-rar-wow-cancelled {
+    border-color:#fecaca !important;
+    background-color:#fef2f2 !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13'/%3E%3Cpath d='m10 11 4 4m0-4-4 4'/%3E%3C/svg%3E") !important;
+}
+
+.wc-action-button-rar-wow-returned {
+    border-color:#fde68a !important;
+    background-color:#fffbeb !important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 7 4 12l5 5'/%3E%3Cpath d='M4 12h10a6 6 0 0 1 6 6v1'/%3E%3Cpath d='M11 4h7a2 2 0 0 1 2 2v5' opacity='.55'/%3E%3C/svg%3E") !important;
+}
+
+.rar-wow-settings .rar-wow-card {
+    max-width:900px;
+    background:#fff;
+    border:1px solid #dcdcde;
+    border-radius:10px;
+    padding:18px 22px;
+    margin:18px 0;
+    box-shadow:0 1px 2px rgba(0,0,0,.03);
+}
+
+.rar-wow-settings .rar-wow-health li {
+    margin:8px 0;
+    line-height:1.55;
+}
+
+@media (max-width:782px) {
+    .wc-action-button-rar-wow-processing,
+    .wc-action-button-rar-wow-confirmed,
+    .wc-action-button-rar-wow-shipped,
+    .wc-action-button-rar-wow-completed,
+    .wc-action-button-rar-wow-cancelled,
+    .wc-action-button-rar-wow-returned {
+        width:28px !important;
+        height:28px !important;
+        min-width:28px !important;
+        background-size:15px 15px !important;
+        margin:1px !important;
+    }
+}
