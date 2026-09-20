@@ -1,6 +1,18 @@
 # RAR Woo Order Workflow & Notify
 
-Production-focused WooCommerce order workflow for **Nabiad**.
+Production-focused WooCommerce order workflow and notification plugin.
+
+## Download
+
+**Latest installable ZIP**
+
+https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/main.zip
+
+**Stable v1.4.0 ZIP**
+
+https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/v1.4.0.zip
+
+> WordPress → Plugins → Add New → Upload Plugin → choose the downloaded ZIP.
 
 ## Workflow
 
@@ -43,7 +55,7 @@ Compact SVG actions are status-aware and only expose allowed transitions.
 
 ## Email reliability
 
-- Cancelled and Returned trigger an immediate RAR admin workflow alert.
+- Cancelled and Returned trigger an immediate admin workflow alert.
 - Admin recipient defaults to WooCommerce → Emails → **New order** recipient.
 - Success/failure is written to order notes.
 - Failed mail calls are also logged in WooCommerce logs with source `rar-wow`.
@@ -51,7 +63,7 @@ Compact SVG actions are status-aware and only expose allowed transitions.
 
 ## Install
 
-1. Download `rar-woo-order-workflow-notify-v1.4.0.zip`.
+1. Download the **Latest installable ZIP** above.
 2. WordPress → Plugins → Add New → Upload Plugin.
 3. Activate **RAR Woo Order Workflow & Notify**.
 4. WooCommerce → **Order Workflow**.
