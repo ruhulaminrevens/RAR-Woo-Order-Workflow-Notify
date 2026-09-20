@@ -4,15 +4,11 @@ Production-focused WooCommerce order workflow and notification plugin.
 
 ## Download
 
-**Latest installable ZIP**
+### [⬇️ Download Latest Installable ZIP](https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/main.zip)
 
-https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/main.zip
+### [📦 Download Stable v1.4.0 ZIP](https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/v1.4.0.zip)
 
-**Stable v1.4.0 ZIP**
-
-https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/v1.4.0.zip
-
-> WordPress → Plugins → Add New → Upload Plugin → choose the downloaded ZIP.
+**Install:** WordPress → Plugins → Add New → Upload Plugin → choose the downloaded ZIP → Install Now → Activate.
 
 ## Workflow
 
@@ -63,7 +59,7 @@ Compact SVG actions are status-aware and only expose allowed transitions.
 
 ## Install
 
-1. Download the **Latest installable ZIP** above.
+1. Download the **Latest Installable ZIP** above.
 2. WordPress → Plugins → Add New → Upload Plugin.
 3. Activate **RAR Woo Order Workflow & Notify**.
 4. WooCommerce → **Order Workflow**.
