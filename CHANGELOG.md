@@ -25,4 +25,4 @@
 
 ## 1.0.0
 
-- Initial Nabiad order workflow and notification system.
+- Initial WooCommerce order workflow and notification system.
