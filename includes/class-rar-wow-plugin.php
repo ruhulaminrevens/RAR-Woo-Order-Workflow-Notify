@@ -31,6 +31,9 @@ final class RAR_WOW_Plugin {
         add_filter( 'woocommerce_email_enabled_cancelled_order', array( $this, 'maybe_disable_core_cancelled_email' ), 20, 3 );
         add_filter( 'woocommerce_email_enabled_customer_completed_order', array( $this, 'maybe_disable_core_completed_email' ), 20, 3 );
 
+        add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
+        add_action( 'woocommerce_view_order', array( $this, 'render_customer_order_experience' ), 30 );
+
         add_action( 'admin_menu', array( $this, 'add_settings_page' ), 90 );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_filter( 'plugin_action_links_' . plugin_basename( RAR_WOW_FILE ), array( $this, 'plugin_action_links' ) );
@@ -314,6 +317,8 @@ final class RAR_WOW_Plugin {
             return;
         }
 
+        $this->record_status_history( $order, $old_status, $new_status );
+
         $key = absint( $order_id ) . ':' . sanitize_key( $new_status );
 
         if ( isset( $this->mail_guard[ $key ] ) ) {
@@ -377,15 +382,1000 @@ final class RAR_WOW_Plugin {
         }
     }
 
+
+    public function enqueue_frontend_assets() {
+        if ( is_admin() ) {
+            return;
+        }
+
+        $should_load = false;
+
+        if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+            $should_load = true;
+        }
+
+        if ( function_exists( 'is_page' ) && is_page( 'order-tracking' ) ) {
+            $should_load = true;
+        }
+
+        global $post;
+
+        if (
+            ! $should_load &&
+            $post instanceof WP_Post &&
+            has_shortcode( (string) $post->post_content, 'woocommerce_order_tracking' )
+        ) {
+            $should_load = true;
+        }
+
+        if ( ! $should_load ) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'rar-wow-customer',
+            RAR_WOW_URL . 'assets/frontend.css',
+            array(),
+            RAR_WOW_VERSION
+        );
+
+        wp_enqueue_script(
+            'rar-wow-customer',
+            RAR_WOW_URL . 'assets/frontend.js',
+            array(),
+            RAR_WOW_VERSION,
+            true
+        );
+    }
+
+    private function customer_status_definition( $status ) {
+        $definitions = array(
+            'pending' => array(
+                'title'   => 'Order received',
+                'message' => 'We received your order and it is waiting for the next processing step.',
+            ),
+            'on-hold' => array(
+                'title'   => 'Awaiting verification',
+                'message' => 'Your order is on hold while payment or order details are being verified.',
+            ),
+            'processing' => array(
+                'title'   => 'Processing',
+                'message' => 'Your order is being prepared for fulfilment.',
+            ),
+            'confirmed' => array(
+                'title'   => 'Confirmed',
+                'message' => 'Your order has been confirmed and is being prepared for courier handover.',
+            ),
+            'shipped' => array(
+                'title'   => 'Shipped',
+                'message' => 'Your order has been handed to the courier and is on the way.',
+            ),
+            'completed' => array(
+                'title'   => 'Completed',
+                'message' => 'Delivery is complete. Thank you for shopping with us.',
+            ),
+            'cancelled' => array(
+                'title'   => 'Cancelled',
+                'message' => 'This order has been cancelled. Contact support if this was unexpected.',
+            ),
+            'returned' => array(
+                'title'   => 'Returned',
+                'message' => 'This order has been marked as returned. Our team will review the return and settlement process.',
+            ),
+            'refunded' => array(
+                'title'   => 'Refunded',
+                'message' => 'A refund has been recorded for this order.',
+            ),
+            'failed' => array(
+                'title'   => 'Payment failed',
+                'message' => 'The payment attempt was not completed. Please review the payment instructions or contact support.',
+            ),
+        );
+
+        $status = sanitize_key( $status );
+
+        if ( isset( $definitions[ $status ] ) ) {
+            return $definitions[ $status ];
+        }
+
+        return array(
+            'title'   => wc_get_order_status_name( $status ),
+            'message' => 'The order status has been updated.',
+        );
+    }
+
+    private function record_status_history( WC_Order $order, $old_status, $new_status ) {
+        $old_status = sanitize_key( $old_status );
+        $new_status = sanitize_key( $new_status );
+
+        /*
+         * Avoid adding work to the checkout-critical initial status transition.
+         * Initial Pending/On-hold/Processing state is reconstructed from the
+         * order itself and WooCommerce status notes when the customer views it.
+         */
+        if (
+            in_array( $old_status, array( 'pending', 'on-hold', '' ), true ) &&
+            in_array( $new_status, array( 'on-hold', 'processing' ), true ) &&
+            empty( $this->manual_action_context[ $order->get_id() ] )
+        ) {
+            return;
+        }
+
+        if (
+            'processing' === $new_status &&
+            empty( $this->manual_action_context[ $order->get_id() ] )
+        ) {
+            return;
+        }
+
+        if (
+            ! in_array(
+                $new_status,
+                array(
+                    'processing',
+                    'confirmed',
+                    'shipped',
+                    'completed',
+                    'cancelled',
+                    'returned',
+                    'refunded',
+                    'failed',
+                ),
+                true
+            )
+        ) {
+            return;
+        }
+
+        $definition = $this->customer_status_definition( $new_status );
+        $message    = $definition['message'];
+
+        if ( 'shipped' === $new_status ) {
+            $courier  = $this->courier_label( $order );
+            $tracking = $this->tracking_value( $order );
+
+            if ( $courier ) {
+                $message .= ' Courier: ' . $courier . '.';
+            }
+
+            if ( $tracking ) {
+                $message .= ' Tracking: ' . $tracking . '.';
+            }
+        }
+
+        $this->append_history_event(
+            $order,
+            array(
+                'type'      => 'status',
+                'status'    => $new_status,
+                'title'     => $definition['title'],
+                'message'   => $message,
+                'timestamp' => time(),
+            )
+        );
+    }
+
+    private function append_history_event( WC_Order $order, $event ) {
+        $history = $order->get_meta( '_rar_wow_customer_history', true );
+
+        if ( ! is_array( $history ) ) {
+            $history = array();
+        }
+
+        $normalized = $this->normalize_history_event( $event );
+
+        if ( empty( $normalized ) ) {
+            return;
+        }
+
+        $last = end( $history );
+
+        if (
+            is_array( $last ) &&
+            isset( $last['type'], $last['status'], $last['timestamp'] ) &&
+            $last['type'] === $normalized['type'] &&
+            $last['status'] === $normalized['status'] &&
+            absint( $normalized['timestamp'] ) - absint( $last['timestamp'] ) < 15
+        ) {
+            return;
+        }
+
+        $history[] = $normalized;
+
+        if ( count( $history ) > 80 ) {
+            $history = array_slice( $history, -80 );
+        }
+
+        $order->update_meta_data( '_rar_wow_customer_history', $history );
+        $order->save_meta_data();
+    }
+
+    private function normalize_history_event( $event ) {
+        if ( ! is_array( $event ) ) {
+            return array();
+        }
+
+        $type = isset( $event['type'] )
+            ? sanitize_key( $event['type'] )
+            : 'update';
+
+        $status = isset( $event['status'] )
+            ? sanitize_key( $event['status'] )
+            : '';
+
+        $title = isset( $event['title'] )
+            ? sanitize_text_field( $event['title'] )
+            : '';
+
+        $message = isset( $event['message'] )
+            ? sanitize_textarea_field( $event['message'] )
+            : '';
+
+        $timestamp = isset( $event['timestamp'] )
+            ? absint( $event['timestamp'] )
+            : time();
+
+        if ( ! $title || ! $timestamp ) {
+            return array();
+        }
+
+        return array(
+            'type'      => $type,
+            'status'    => $status,
+            'title'     => $title,
+            'message'   => $message,
+            'timestamp' => $timestamp,
+        );
+    }
+
+    private function parse_local_datetime_timestamp( $value ) {
+        $value = trim( (string) $value );
+
+        if ( ! $value ) {
+            return 0;
+        }
+
+        try {
+            $date = new DateTime( $value, wp_timezone() );
+            return $date->getTimestamp();
+        } catch ( Exception $e ) {
+            $timestamp = strtotime( $value );
+            return $timestamp ? absint( $timestamp ) : 0;
+        }
+    }
+
+    private function note_timestamp( $note ) {
+        if ( isset( $note->date_created ) ) {
+            if (
+                is_object( $note->date_created ) &&
+                method_exists( $note->date_created, 'getTimestamp' )
+            ) {
+                return absint( $note->date_created->getTimestamp() );
+            }
+
+            $timestamp = strtotime( (string) $note->date_created );
+
+            if ( $timestamp ) {
+                return absint( $timestamp );
+            }
+        }
+
+        if ( isset( $note->date_created_gmt ) ) {
+            $timestamp = strtotime( (string) $note->date_created_gmt . ' UTC' );
+
+            if ( $timestamp ) {
+                return absint( $timestamp );
+            }
+        }
+
+        return 0;
+    }
+
+    private function status_slug_from_label( $label ) {
+        $normalized = strtolower(
+            trim(
+                preg_replace(
+                    '/[^a-z0-9]+/',
+                    '-',
+                    remove_accents( (string) $label )
+                ),
+                '-'
+            )
+        );
+
+        $map = array(
+            'pending-payment' => 'pending',
+            'pending'         => 'pending',
+            'on-hold'         => 'on-hold',
+            'processing'      => 'processing',
+            'confirmed'       => 'confirmed',
+            'shipped'         => 'shipped',
+            'completed'       => 'completed',
+            'complete'        => 'completed',
+            'cancelled'       => 'cancelled',
+            'canceled'        => 'cancelled',
+            'returned'        => 'returned',
+            'refunded'        => 'refunded',
+            'failed'          => 'failed',
+        );
+
+        return isset( $map[ $normalized ] )
+            ? $map[ $normalized ]
+            : '';
+    }
+
+    private function status_from_internal_note( $content ) {
+        $plain = trim( wp_strip_all_tags( (string) $content ) );
+
+        if ( ! $plain ) {
+            return '';
+        }
+
+        if (
+            ! preg_match(
+                '/Order status changed from\s+.{1,100}?\s+to\s+([A-Za-z][A-Za-z \-]{1,60})\./i',
+                $plain,
+                $matches
+            )
+        ) {
+            return '';
+        }
+
+        return $this->status_slug_from_label( $matches[1] );
+    }
+
+    private function public_note_event( $note ) {
+        $content = isset( $note->content )
+            ? trim( wp_strip_all_tags( (string) $note->content ) )
+            : '';
+
+        if ( ! $content ) {
+            return array();
+        }
+
+        $title   = 'Order update';
+        $message = $content;
+
+        $known_titles = array(
+            'finished'      => 'Finished',
+            'delivered'     => 'Delivered',
+            'shipped'       => 'Shipped',
+            'delivery hold' => 'Delivery Hold',
+            'billing'       => 'Billing',
+            'confirmed'     => 'Confirmed',
+            'processing'    => 'Processing',
+            'pending'       => 'Pending',
+            'cancelled'     => 'Cancelled',
+            'returned'      => 'Returned',
+        );
+
+        foreach ( $known_titles as $needle => $label ) {
+            if ( 0 === stripos( $content, $needle ) ) {
+                $title = $label;
+
+                $remaining = trim(
+                    preg_replace(
+                        '/^' . preg_quote( $needle, '/' ) . '\s*[:\-]?\s*/i',
+                        '',
+                        $content
+                    )
+                );
+
+                if ( $remaining ) {
+                    $message = $remaining;
+                }
+
+                break;
+            }
+        }
+
+        return $this->normalize_history_event(
+            array(
+                'type'      => 'note',
+                'status'    => '',
+                'title'     => $title,
+                'message'   => $message,
+                'timestamp' => $this->note_timestamp( $note ),
+            )
+        );
+    }
+
+    private function payment_history_events( WC_Order $order ) {
+        $events       = array();
+        $status       = sanitize_key( (string) $order->get_meta( '_rar_wap_status', true ) );
+        $channel      = trim( (string) $order->get_meta( '_rar_wap_channel_label', true ) );
+        $amount       = (float) $order->get_meta( '_rar_wap_required_amount', true );
+        $currency     = $order->get_currency();
+        $amount_label = $amount > 0
+            ? wp_strip_all_tags(
+                wc_price(
+                    $amount,
+                    array( 'currency' => $currency )
+                )
+            )
+            : '';
+
+        $submitted_at = $this->parse_local_datetime_timestamp(
+            $order->get_meta( '_rar_wap_submitted_at', true )
+        );
+
+        if ( $submitted_at ) {
+            $message = 'Advance payment details were submitted';
+
+            if ( $channel ) {
+                $message .= ' via ' . $channel;
+            }
+
+            if ( $amount_label ) {
+                $message .= ' for ' . $amount_label;
+            }
+
+            $message .= '.';
+
+            if ( 'verified' !== $status ) {
+                $message .= ' Awaiting manual verification.';
+            }
+
+            $events[] = $this->normalize_history_event(
+                array(
+                    'type'      => 'payment',
+                    'status'    => 'submitted',
+                    'title'     => 'Advance payment submitted',
+                    'message'   => $message,
+                    'timestamp' => $submitted_at,
+                )
+            );
+        }
+
+        if ( 'verified' === $status ) {
+            $verified_at = $this->parse_local_datetime_timestamp(
+                $order->get_meta( '_rar_wap_verified_at', true )
+            );
+
+            if ( ! $verified_at && $order->get_date_paid() ) {
+                $verified_at = $order->get_date_paid()->getTimestamp();
+            }
+
+            if ( $verified_at ) {
+                $message = 'Advance payment';
+
+                if ( $amount_label ) {
+                    $message .= ' of ' . $amount_label;
+                }
+
+                if ( $channel ) {
+                    $message .= ' via ' . $channel;
+                }
+
+                $message .= ' was verified.';
+
+                $events[] = $this->normalize_history_event(
+                    array(
+                        'type'      => 'payment',
+                        'status'    => 'verified',
+                        'title'     => 'Payment verified',
+                        'message'   => $message,
+                        'timestamp' => $verified_at,
+                    )
+                );
+            }
+        } elseif ( 'unverified' === $status ) {
+            $events[] = $this->normalize_history_event(
+                array(
+                    'type'      => 'payment',
+                    'status'    => 'unverified',
+                    'title'     => 'Payment needs attention',
+                    'message'   => 'The submitted payment reference could not be verified. Please contact support before sending another payment.',
+                    'timestamp' => time(),
+                )
+            );
+        }
+
+        return array_filter( $events );
+    }
+
+    private function build_customer_history( WC_Order $order ) {
+        $settings = $this->settings();
+        $events   = array();
+
+        $created = $order->get_date_created();
+
+        if ( $created ) {
+            $events[] = $this->normalize_history_event(
+                array(
+                    'type'      => 'placed',
+                    'status'    => 'placed',
+                    'title'     => 'Order placed',
+                    'message'   => 'We received your order. New status, courier and payment updates will appear here.',
+                    'timestamp' => $created->getTimestamp(),
+                )
+            );
+        }
+
+        $stored = $order->get_meta( '_rar_wow_customer_history', true );
+
+        if ( is_array( $stored ) ) {
+            foreach ( $stored as $event ) {
+                $event = $this->normalize_history_event( $event );
+
+                if ( $event ) {
+                    $events[] = $event;
+                }
+            }
+        }
+
+        $notes = wc_get_order_notes(
+            array(
+                'order_id' => $order->get_id(),
+                'limit'    => 100,
+            )
+        );
+
+        foreach ( $notes as $note ) {
+            $is_customer_note = ! empty( $note->customer_note );
+
+            if (
+                $is_customer_note &&
+                'yes' === $settings['history_public_notes']
+            ) {
+                $event = $this->public_note_event( $note );
+
+                if ( $event ) {
+                    $events[] = $event;
+                }
+
+                continue;
+            }
+
+            if ( $is_customer_note ) {
+                continue;
+            }
+
+            $status = $this->status_from_internal_note(
+                isset( $note->content )
+                    ? $note->content
+                    : ''
+            );
+
+            if ( ! $status ) {
+                continue;
+            }
+
+            $definition = $this->customer_status_definition( $status );
+
+            $events[] = $this->normalize_history_event(
+                array(
+                    'type'      => 'status',
+                    'status'    => $status,
+                    'title'     => $definition['title'],
+                    'message'   => $definition['message'],
+                    'timestamp' => $this->note_timestamp( $note ),
+                )
+            );
+        }
+
+        foreach ( $this->payment_history_events( $order ) as $payment_event ) {
+            $events[] = $payment_event;
+        }
+
+        $current_status = sanitize_key( $order->get_status() );
+        $has_current    = false;
+
+        foreach ( $events as $event ) {
+            if (
+                isset( $event['type'], $event['status'] ) &&
+                'status' === $event['type'] &&
+                $current_status === $event['status']
+            ) {
+                $has_current = true;
+                break;
+            }
+        }
+
+        if ( ! $has_current && $current_status ) {
+            $definition = $this->customer_status_definition( $current_status );
+            $modified   = $order->get_date_modified();
+
+            $events[] = $this->normalize_history_event(
+                array(
+                    'type'      => 'status',
+                    'status'    => $current_status,
+                    'title'     => $definition['title'],
+                    'message'   => $definition['message'],
+                    'timestamp' => $modified
+                        ? $modified->getTimestamp()
+                        : time(),
+                )
+            );
+        }
+
+        $events = array_values( array_filter( $events ) );
+
+        usort(
+            $events,
+            static function ( $a, $b ) {
+                return absint( $a['timestamp'] ) <=> absint( $b['timestamp'] );
+            }
+        );
+
+        $deduped = array();
+
+        foreach ( $events as $event ) {
+            $duplicate = false;
+
+            foreach ( array_slice( $deduped, -3 ) as $existing ) {
+                if (
+                    $existing['type'] === $event['type'] &&
+                    $existing['status'] === $event['status'] &&
+                    $existing['title'] === $event['title'] &&
+                    abs( absint( $existing['timestamp'] ) - absint( $event['timestamp'] ) ) <= 90
+                ) {
+                    $duplicate = true;
+                    break;
+                }
+            }
+
+            if ( ! $duplicate ) {
+                $deduped[] = $event;
+            }
+        }
+
+        if ( count( $deduped ) > 50 ) {
+            $deduped = array_slice( $deduped, -50 );
+        }
+
+        return array_reverse( $deduped );
+    }
+
+    private function customer_can_view_order_panel( WC_Order $order ) {
+        if ( current_user_can( 'manage_woocommerce' ) ) {
+            return true;
+        }
+
+        if (
+            function_exists( 'is_wc_endpoint_url' ) &&
+            is_wc_endpoint_url( 'view-order' )
+        ) {
+            return is_user_logged_in() &&
+                absint( $order->get_customer_id() ) > 0 &&
+                absint( $order->get_customer_id() ) === get_current_user_id();
+        }
+
+        $nonce = isset( $_REQUEST['woocommerce-order-tracking-nonce'] )
+            ? wc_clean( wp_unslash( $_REQUEST['woocommerce-order-tracking-nonce'] ) )
+            : (
+                isset( $_REQUEST['_wpnonce'] )
+                    ? wc_clean( wp_unslash( $_REQUEST['_wpnonce'] ) )
+                    : ''
+            );
+
+        if ( ! $nonce || ! wp_verify_nonce( $nonce, 'woocommerce-order_tracking' ) ) {
+            return false;
+        }
+
+        $request_order_id = isset( $_REQUEST['orderid'] )
+            ? ltrim( wc_clean( wp_unslash( $_REQUEST['orderid'] ) ), '#' )
+            : '';
+
+        $request_email = isset( $_REQUEST['order_email'] )
+            ? sanitize_email( wp_unslash( $_REQUEST['order_email'] ) )
+            : '';
+
+        if ( ! $request_order_id || ! $request_email ) {
+            return false;
+        }
+
+        $resolved_id = apply_filters(
+            'woocommerce_shortcode_order_tracking_order_id',
+            $request_order_id
+        );
+
+        return absint( $resolved_id ) === $order->get_id() &&
+            strtolower( (string) $order->get_billing_email() ) === strtolower( $request_email );
+    }
+
+    private function order_progress_stage( WC_Order $order, $history ) {
+        $map = array(
+            'placed'     => 0,
+            'pending'    => 0,
+            'on-hold'    => 0,
+            'processing' => 0,
+            'confirmed'  => 1,
+            'shipped'    => 2,
+            'completed'  => 3,
+            'returned'   => 3,
+        );
+
+        $stage = isset( $map[ $order->get_status() ] )
+            ? $map[ $order->get_status() ]
+            : 0;
+
+        foreach ( $history as $event ) {
+            if (
+                isset( $event['status'] ) &&
+                isset( $map[ $event['status'] ] )
+            ) {
+                $stage = max( $stage, $map[ $event['status'] ] );
+            }
+        }
+
+        return min( 3, max( 0, absint( $stage ) ) );
+    }
+
+    private function courier_eta( WC_Order $order ) {
+        foreach ( $order->get_items( 'shipping' ) as $shipping_item ) {
+            foreach ( array( 'rwsc_eta', '_rwsc_eta' ) as $key ) {
+                $eta = trim( (string) $shipping_item->get_meta( $key, true ) );
+
+                if ( $eta ) {
+                    return $eta;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private function payment_summary( WC_Order $order ) {
+        $status  = sanitize_key( (string) $order->get_meta( '_rar_wap_status', true ) );
+        $channel = trim( (string) $order->get_meta( '_rar_wap_channel_label', true ) );
+        $amount  = (float) $order->get_meta( '_rar_wap_required_amount', true );
+
+        $amount_label = $amount > 0
+            ? wp_strip_all_tags(
+                wc_price(
+                    $amount,
+                    array( 'currency' => $order->get_currency() )
+                )
+            )
+            : '';
+
+        if ( 'verified' === $status ) {
+            $label = 'Verified';
+
+            if ( $amount_label ) {
+                $label .= ' · ' . $amount_label;
+            }
+
+            if ( $channel ) {
+                $label .= ' via ' . $channel;
+            }
+
+            return array(
+                'label' => $label,
+                'class' => 'is-good',
+            );
+        }
+
+        if ( 'submitted' === $status ) {
+            return array(
+                'label' => 'Awaiting verification' . ( $channel ? ' · ' . $channel : '' ),
+                'class' => 'is-waiting',
+            );
+        }
+
+        if ( 'unverified' === $status ) {
+            return array(
+                'label' => 'Needs attention',
+                'class' => 'is-alert',
+            );
+        }
+
+        if ( $order->is_paid() ) {
+            return array(
+                'label' => 'Paid',
+                'class' => 'is-good',
+            );
+        }
+
+        $method = trim( (string) $order->get_payment_method_title() );
+
+        return array(
+            'label' => $method ? $method : 'Not recorded',
+            'class' => '',
+        );
+    }
+
+    private function history_date_label( $timestamp ) {
+        if ( ! $timestamp ) {
+            return '';
+        }
+
+        return wp_date(
+            get_option( 'date_format' ) . ' · ' . get_option( 'time_format' ),
+            absint( $timestamp ),
+            wp_timezone()
+        );
+    }
+
+    public function render_customer_order_experience( $order_id ) {
+        $settings = $this->settings();
+
+        if ( 'yes' !== $settings['customer_status_panel'] ) {
+            return;
+        }
+
+        $order = wc_get_order( $order_id );
+
+        if (
+            ! $order ||
+            ! $this->customer_can_view_order_panel( $order )
+        ) {
+            return;
+        }
+
+        $history = $this->build_customer_history( $order );
+        $status  = sanitize_key( $order->get_status() );
+        $stage   = $this->order_progress_stage( $order, $history );
+        $courier = $this->courier_label( $order );
+        $eta     = $this->courier_eta( $order );
+        $tracking= $this->tracking_value( $order );
+        $payment = $this->payment_summary( $order );
+        $created = $order->get_date_created();
+
+        $context = (
+            function_exists( 'is_wc_endpoint_url' ) &&
+            is_wc_endpoint_url( 'view-order' )
+        )
+            ? 'account'
+            : 'tracking';
+
+        $steps = array(
+            'Received',
+            'Confirmed',
+            'Shipped',
+            'Completed',
+        );
+
+        $exception = in_array(
+            $status,
+            array( 'cancelled', 'returned', 'failed', 'refunded' ),
+            true
+        );
+
+        ?>
+        <section
+            class="rar-wow-order-experience rar-wow-status-<?php echo esc_attr( $status ); ?>"
+            data-rar-context="<?php echo esc_attr( $context ); ?>"
+            aria-labelledby="rar-wow-order-status-title-<?php echo absint( $order->get_id() ); ?>"
+        >
+            <div class="rar-wow-customer-head">
+                <div>
+                    <span class="rar-wow-eyebrow">
+                        Order #<?php echo esc_html( $order->get_order_number() ); ?>
+                    </span>
+                    <h2 id="rar-wow-order-status-title-<?php echo absint( $order->get_id() ); ?>">
+                        Order Status
+                    </h2>
+                    <p>
+                        Live order progress, payment and courier updates in one place.
+                    </p>
+                </div>
+
+                <span class="rar-wow-current-badge <?php echo $exception ? 'is-exception' : ''; ?>">
+                    <?php echo esc_html( wc_get_order_status_name( $status ) ); ?>
+                </span>
+            </div>
+
+            <div class="rar-wow-progress" role="list" aria-label="Order progress">
+                <?php foreach ( $steps as $index => $label ) : ?>
+                    <?php
+                    $done   = $index <= $stage;
+                    $active = $index === $stage && ! $exception;
+                    ?>
+                    <div
+                        class="rar-wow-progress-step <?php echo $done ? 'is-done' : ''; ?> <?php echo $active ? 'is-active' : ''; ?>"
+                        role="listitem"
+                    >
+                        <span class="rar-wow-progress-node" aria-hidden="true">
+                            <?php echo $done ? '&#10003;' : esc_html( $index + 1 ); ?>
+                        </span>
+                        <span class="rar-wow-progress-label">
+                            <?php echo esc_html( $label ); ?>
+                        </span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <?php if ( $exception ) : ?>
+                <div class="rar-wow-exception-note">
+                    <?php
+                    $definition = $this->customer_status_definition( $status );
+                    echo esc_html( $definition['message'] );
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="rar-wow-order-summary">
+                <div class="rar-wow-summary-item">
+                    <span>Placed</span>
+                    <strong>
+                        <?php
+                        echo $created
+                            ? esc_html( $this->history_date_label( $created->getTimestamp() ) )
+                            : '—';
+                        ?>
+                    </strong>
+                </div>
+
+                <div class="rar-wow-summary-item">
+                    <span>Courier</span>
+                    <strong><?php echo esc_html( $courier ? $courier : 'Not assigned yet' ); ?></strong>
+                    <?php if ( $eta ) : ?>
+                        <small><?php echo esc_html( $eta ); ?></small>
+                    <?php endif; ?>
+                </div>
+
+                <div class="rar-wow-summary-item">
+                    <span>Tracking</span>
+                    <strong class="rar-wow-tracking-value">
+                        <?php echo esc_html( $tracking ? $tracking : 'Not assigned yet' ); ?>
+                    </strong>
+                </div>
+
+                <div class="rar-wow-summary-item <?php echo esc_attr( $payment['class'] ); ?>">
+                    <span>Payment</span>
+                    <strong><?php echo esc_html( $payment['label'] ); ?></strong>
+                </div>
+            </div>
+
+            <?php if ( 'yes' === $settings['customer_order_history'] ) : ?>
+                <div class="rar-wow-history-head">
+                    <div>
+                        <h3>Order History</h3>
+                        <p>Newest updates first</p>
+                    </div>
+                    <span><?php echo esc_html( count( $history ) ); ?> updates</span>
+                </div>
+
+                <ol class="rar-wow-history-list">
+                    <?php foreach ( $history as $event ) : ?>
+                        <?php
+                        $event_status = isset( $event['status'] )
+                            ? sanitize_key( $event['status'] )
+                            : '';
+                        $event_type   = isset( $event['type'] )
+                            ? sanitize_key( $event['type'] )
+                            : 'update';
+                        ?>
+                        <li class="rar-wow-history-event rar-wow-event-<?php echo esc_attr( $event_type ); ?> rar-wow-event-status-<?php echo esc_attr( $event_status ); ?>">
+                            <span class="rar-wow-history-dot" aria-hidden="true"></span>
+                            <div class="rar-wow-history-content">
+                                <div class="rar-wow-history-title-row">
+                                    <strong><?php echo esc_html( $event['title'] ); ?></strong>
+                                    <time datetime="<?php echo esc_attr( gmdate( 'c', absint( $event['timestamp'] ) ) ); ?>">
+                                        <?php echo esc_html( $this->history_date_label( $event['timestamp'] ) ); ?>
+                                    </time>
+                                </div>
+
+                                <?php if ( ! empty( $event['message'] ) ) : ?>
+                                    <p><?php echo esc_html( $event['message'] ); ?></p>
+                                <?php endif; ?>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ol>
+
+                <div class="rar-wow-history-security">
+                    Only customer-safe updates are shown here. Private admin notes and internal operational logs remain hidden.
+                </div>
+            <?php endif; ?>
+        </section>
+        <?php
+    }
+
     private function settings() {
         return wp_parse_args(
             (array) get_option( 'rar_wow_settings', array() ),
             array(
                 'admin_email'     => '',
                 'brand_name'      => 'Nabiad',
-                'support_text'    => 'Need help? Reply to this email and our team will assist you.',
-                'customer_emails' => 'yes',
-                'admin_alerts'    => 'yes',
+                'support_text'          => 'Need help? Reply to this email and our team will assist you.',
+                'customer_emails'       => 'yes',
+                'admin_alerts'          => 'yes',
+                'customer_status_panel' => 'yes',
+                'customer_order_history'=> 'yes',
+                'history_public_notes'  => 'yes',
             )
         );
     }
@@ -870,10 +1860,25 @@ final class RAR_WOW_Plugin {
     }
 
     private function courier_label( WC_Order $order ) {
-        $courier = (string) $order->get_meta(
-            '_nabiad_courier',
-            true
-        );
+        $courier = '';
+
+        foreach (
+            array(
+                '_rwsc_selected_courier',
+                '_nabiad_courier',
+            ) as $meta_key
+        ) {
+            $courier = trim(
+                (string) $order->get_meta(
+                    $meta_key,
+                    true
+                )
+            );
+
+            if ( $courier ) {
+                break;
+            }
+        }
 
         if ( $courier ) {
             $labels = array(
@@ -932,8 +1937,16 @@ final class RAR_WOW_Plugin {
         foreach (
             array(
                 '_nabiad_tracking_id',
-                '_redx_tracking_id',
+                '_rwsc_tracking_id',
                 '_tracking_number',
+                '_redx_tracking_id',
+                '_redx_parcel_id',
+                '_pathao_tracking_id',
+                '_pathao_consignment_id',
+                '_steadfast_tracking_id',
+                '_steadfast_consignment_id',
+                '_paperfly_tracking_id',
+                '_sundarban_tracking_id',
             ) as $key
         ) {
             $value = trim(
@@ -1017,6 +2030,15 @@ final class RAR_WOW_Plugin {
                 ? 'yes'
                 : 'no',
             'admin_alerts' => ! empty( $input['admin_alerts'] )
+                ? 'yes'
+                : 'no',
+            'customer_status_panel' => ! empty( $input['customer_status_panel'] )
+                ? 'yes'
+                : 'no',
+            'customer_order_history' => ! empty( $input['customer_order_history'] )
+                ? 'yes'
+                : 'no',
+            'history_public_notes' => ! empty( $input['history_public_notes'] )
                 ? 'yes'
                 : 'no',
         );
@@ -1123,6 +2145,54 @@ final class RAR_WOW_Plugin {
                                     >
                                     Manual Processing recovery, Cancelled and Returned
                                 </label>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">Customer order status panel</th>
+                            <td>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="rar_wow_settings[customer_status_panel]"
+                                        value="1"
+                                        <?php checked( $settings['customer_status_panel'], 'yes' ); ?>
+                                    >
+                                    Show professional order status/progress on View Order and Order Tracking results
+                                </label>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">Customer order history</th>
+                            <td>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="rar_wow_settings[customer_order_history]"
+                                        value="1"
+                                        <?php checked( $settings['customer_order_history'], 'yes' ); ?>
+                                    >
+                                    Show full customer-safe order history below the status panel
+                                </label>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">Customer-visible notes</th>
+                            <td>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="rar_wow_settings[history_public_notes]"
+                                        value="1"
+                                        <?php checked( $settings['history_public_notes'], 'yes' ); ?>
+                                    >
+                                    Include WooCommerce notes that were explicitly marked visible to the customer
+                                </label>
+                                <p class="description">
+                                    Private admin notes are never printed. Historical status transitions are reconstructed only from trusted status-change records.
+                                </p>
                             </td>
                         </tr>
                     </table>
