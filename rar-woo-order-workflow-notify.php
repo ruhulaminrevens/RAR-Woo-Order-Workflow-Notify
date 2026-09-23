@@ -3,21 +3,21 @@
  * Plugin Name: RAR Woo Order Workflow & Notify
  * Plugin URI:  https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify
  * Description: Professional WooCommerce order workflow for Processing → Confirmed → Shipped → Completed, with Cancelled/Returned recovery, compact admin actions, and bilingual customer/admin notifications.
- * Version:     1.4.0
+ * Version:     1.5.0
  * Author:      Ruhul Amin Revens
  * Author URI:  https://github.com/ruhulaminrevens
  * Text Domain: rar-woo-order-workflow-notify
  * Requires at least: 6.4
  * Requires PHP: 7.4
  * WC requires at least: 8.0
- * WC tested up to: 10.6
+ * WC tested up to: 11.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'RAR_WOW_VERSION', '1.4.0' );
+define( 'RAR_WOW_VERSION', '1.5.0' );
 define( 'RAR_WOW_FILE', __FILE__ );
 define( 'RAR_WOW_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RAR_WOW_URL', plugin_dir_url( __FILE__ ) );
