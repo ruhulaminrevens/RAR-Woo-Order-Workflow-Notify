@@ -1,0 +1,339 @@
+/* RAR Woo Order Workflow & Notify — customer order experience */
+.rar-wow-order-experience{
+    --rar-wow-primary:#0b8a62;
+    --rar-wow-primary-soft:#edf9f4;
+    --rar-wow-border:#e3e9e6;
+    --rar-wow-text:#1f2925;
+    --rar-wow-muted:#6f7a75;
+    --rar-wow-danger:#c2413b;
+    --rar-wow-warning:#b76e00;
+    margin:28px 0;
+    padding:24px;
+    border:1px solid var(--rar-wow-border);
+    border-radius:16px;
+    background:#fff;
+    box-shadow:0 5px 24px rgba(16,42,32,.055);
+    color:var(--rar-wow-text);
+}
+.rar-wow-customer-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--rar-wow-border);
+}
+.rar-wow-eyebrow{
+    display:inline-block;
+    margin-bottom:5px;
+    color:var(--rar-wow-primary);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.075em;
+    text-transform:uppercase;
+}
+.rar-wow-customer-head h2{
+    margin:0!important;
+    font-size:25px!important;
+    line-height:1.2!important;
+}
+.rar-wow-customer-head p{
+    margin:7px 0 0;
+    color:var(--rar-wow-muted);
+    font-size:13px;
+    line-height:1.55;
+}
+.rar-wow-current-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+    min-height:32px;
+    padding:6px 12px;
+    border:1px solid #b8e0d1;
+    border-radius:999px;
+    background:var(--rar-wow-primary-soft);
+    color:#087150;
+    font-size:12px;
+    font-weight:800;
+}
+.rar-wow-current-badge.is-exception{
+    border-color:#f2c9c5;
+    background:#fff4f2;
+    color:var(--rar-wow-danger);
+}
+.rar-wow-progress{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    position:relative;
+    margin:28px 0 24px;
+}
+.rar-wow-progress:before{
+    content:"";
+    position:absolute;
+    top:15px;
+    left:12.5%;
+    right:12.5%;
+    height:3px;
+    background:#e7ece9;
+    border-radius:4px;
+}
+.rar-wow-progress-step{
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    text-align:center;
+    color:#8a948f;
+}
+.rar-wow-progress-node{
+    display:grid;
+    place-items:center;
+    width:31px;
+    height:31px;
+    border:3px solid #eef2f0;
+    border-radius:50%;
+    background:#dfe5e2;
+    color:#7b8580;
+    font-size:11px;
+    font-weight:800;
+    box-shadow:0 0 0 4px #fff;
+}
+.rar-wow-progress-step.is-done .rar-wow-progress-node{
+    border-color:#d8f0e7;
+    background:var(--rar-wow-primary);
+    color:#fff;
+}
+.rar-wow-progress-step.is-active .rar-wow-progress-node{
+    box-shadow:0 0 0 4px #fff,0 0 0 7px rgba(11,138,98,.12);
+}
+.rar-wow-progress-label{
+    font-size:11px;
+    font-weight:700;
+}
+.rar-wow-progress-step.is-done .rar-wow-progress-label{
+    color:#30423a;
+}
+.rar-wow-exception-note{
+    margin:-4px 0 20px;
+    padding:11px 13px;
+    border-left:4px solid #d97706;
+    border-radius:8px;
+    background:#fff8ec;
+    color:#674c1d;
+    font-size:12px;
+    line-height:1.55;
+}
+.rar-wow-order-summary{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+    margin:0 0 26px;
+}
+.rar-wow-summary-item{
+    min-width:0;
+    padding:13px 14px;
+    border:1px solid var(--rar-wow-border);
+    border-radius:11px;
+    background:#fbfcfb;
+}
+.rar-wow-summary-item>span{
+    display:block;
+    margin-bottom:5px;
+    color:var(--rar-wow-muted);
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+}
+.rar-wow-summary-item strong{
+    display:block;
+    color:#24302a;
+    font-size:12px;
+    line-height:1.4;
+    overflow-wrap:anywhere;
+}
+.rar-wow-summary-item small{
+    display:block;
+    margin-top:4px;
+    color:#7d8782;
+    font-size:10px;
+    line-height:1.35;
+}
+.rar-wow-summary-item.is-good{
+    border-color:#cbe9dc;
+    background:#f5fbf8;
+}
+.rar-wow-summary-item.is-good strong{color:#087150}
+.rar-wow-summary-item.is-waiting{
+    border-color:#f0deb5;
+    background:#fffaf1;
+}
+.rar-wow-summary-item.is-alert{
+    border-color:#f2c9c5;
+    background:#fff6f5;
+}
+.rar-wow-summary-item.is-alert strong{color:var(--rar-wow-danger)}
+.rar-wow-tracking-value{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+    font-size:11px!important;
+}
+.rar-wow-history-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin:0 0 14px;
+    padding-top:22px;
+    border-top:1px solid var(--rar-wow-border);
+}
+.rar-wow-history-head h3{
+    margin:0!important;
+    font-size:19px!important;
+    line-height:1.2!important;
+}
+.rar-wow-history-head p{
+    margin:4px 0 0;
+    color:var(--rar-wow-muted);
+    font-size:11px;
+}
+.rar-wow-history-head>span{
+    color:var(--rar-wow-muted);
+    font-size:11px;
+    font-weight:700;
+}
+.rar-wow-history-list{
+    list-style:none!important;
+    margin:0!important;
+    padding:0!important;
+}
+.rar-wow-history-event{
+    position:relative;
+    display:grid;
+    grid-template-columns:20px minmax(0,1fr);
+    gap:12px;
+    margin:0!important;
+    padding:0 0 20px!important;
+}
+.rar-wow-history-event:not(:last-child):before{
+    content:"";
+    position:absolute;
+    left:7px;
+    top:17px;
+    bottom:0;
+    width:2px;
+    background:#e7ece9;
+}
+.rar-wow-history-dot{
+    position:relative;
+    z-index:1;
+    display:block;
+    width:16px;
+    height:16px;
+    margin-top:2px;
+    border:4px solid #dff1ea;
+    border-radius:50%;
+    background:var(--rar-wow-primary);
+    box-sizing:border-box;
+}
+.rar-wow-event-note .rar-wow-history-dot{
+    border-color:#e5e9e7;
+    background:#7b8882;
+}
+.rar-wow-event-payment .rar-wow-history-dot{
+    border-color:#dcecf7;
+    background:#2f7db5;
+}
+.rar-wow-event-status-cancelled .rar-wow-history-dot,
+.rar-wow-event-status-failed .rar-wow-history-dot{
+    border-color:#f7d8d4;
+    background:#c84d45;
+}
+.rar-wow-event-status-returned .rar-wow-history-dot{
+    border-color:#f7e1b9;
+    background:#d7840b;
+}
+.rar-wow-history-content{
+    min-width:0;
+    padding-bottom:1px;
+}
+.rar-wow-history-title-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+}
+.rar-wow-history-title-row strong{
+    color:#223029;
+    font-size:13px;
+    line-height:1.4;
+}
+.rar-wow-history-title-row time{
+    flex:0 0 auto;
+    color:#87918c;
+    font-size:10px;
+    line-height:1.45;
+    text-align:right;
+}
+.rar-wow-history-content p{
+    margin:5px 0 0!important;
+    color:#58645e;
+    font-size:12px;
+    line-height:1.55;
+}
+.rar-wow-history-security{
+    margin-top:2px;
+    padding:10px 12px;
+    border:1px solid #e7ecea;
+    border-radius:8px;
+    background:#fafcfb;
+    color:#7a8580;
+    font-size:10px;
+    line-height:1.5;
+}
+@media(max-width:900px){
+    .rar-wow-order-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+    .rar-wow-order-experience{
+        margin:20px 0;
+        padding:18px 15px;
+        border-radius:13px;
+    }
+    .rar-wow-customer-head{
+        display:block;
+    }
+    .rar-wow-current-badge{
+        margin-top:12px;
+    }
+    .rar-wow-progress{
+        margin:24px 0 20px;
+    }
+    .rar-wow-progress:before{
+        left:10%;
+        right:10%;
+    }
+    .rar-wow-progress-label{
+        font-size:9px;
+    }
+    .rar-wow-order-summary{
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+    .rar-wow-summary-item{
+        padding:11px;
+    }
+    .rar-wow-history-title-row{
+        display:block;
+    }
+    .rar-wow-history-title-row time{
+        display:block;
+        margin-top:3px;
+        text-align:left;
+    }
+}
+@media(max-width:420px){
+    .rar-wow-order-summary{grid-template-columns:1fr}
+}
