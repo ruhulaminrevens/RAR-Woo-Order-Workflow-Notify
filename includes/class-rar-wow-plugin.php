@@ -1369,7 +1369,7 @@ final class RAR_WOW_Plugin {
             (array) get_option( 'rar_wow_settings', array() ),
             array(
                 'admin_email'     => '',
-                'brand_name'      => 'Nabiad',
+                'brand_name'      => get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : 'Store',
                 'support_text'          => 'Need help? Reply to this email and our team will assist you.',
                 'customer_emails'       => 'yes',
                 'admin_alerts'          => 'yes',
@@ -1583,7 +1583,7 @@ final class RAR_WOW_Plugin {
                         $number
                     ),
                     'heading'       => 'Order Confirmed ✅',
-                    'intro'         => 'আপনার order confirm করা হয়েছে। Thank you for choosing Nabiad! আমরা এখন আপনার পণ্য carefully prepare করছি। খুব শিগগিরই courier-এর কাছে handover করা হবে।',
+                    'intro'         => 'আপনার order confirm করা হয়েছে। Thank you for your order! আমরা এখন আপনার পণ্য carefully prepare করছি। খুব শিগগিরই courier-এর কাছে handover করা হবে।',
                     'status_label'  => 'Confirmed',
                     'show_progress' => true,
                     'show_reviews'  => false,
@@ -1807,7 +1807,7 @@ final class RAR_WOW_Plugin {
 
             <tr>
                 <td style="padding:14px 28px;background:#f8fafb;border-top:1px solid #e8edef;font-size:11px;color:#7b858d;">
-                    Nabiad — Built with Nabiad Distribution Ltd.
+                    <?php echo esc_html( $settings['brand_name'] ); ?> — Order update
                 </td>
             </tr>
         </table>
@@ -2022,7 +2022,7 @@ final class RAR_WOW_Plugin {
                 : '',
             'brand_name' => isset( $input['brand_name'] )
                 ? sanitize_text_field( $input['brand_name'] )
-                : 'Nabiad',
+                : ( get_bloginfo( 'name' ) ? get_bloginfo( 'name' ) : 'Store' ),
             'support_text' => isset( $input['support_text'] )
                 ? sanitize_text_field( $input['support_text'] )
                 : '',
