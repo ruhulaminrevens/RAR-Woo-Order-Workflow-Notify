@@ -1,0 +1,47 @@
+name: Validate Plugin
+
+on:
+  push:
+    branches:
+      - main
+      - "v*"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ["7.4", "8.3"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: PHP syntax
+        run: |
+          find . -type f -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+
+      - name: JavaScript syntax
+        run: |
+          if command -v node >/dev/null 2>&1; then
+            find assets -type f -name "*.js" -print0 | xargs -0 -r -n1 node --check
+          fi
+
+      - name: Release structure
+        run: |
+          test -f rar-woo-order-workflow-notify.php
+          test -f includes/class-rar-wow-plugin.php
+          test -f assets/admin.css
+          test -f assets/frontend.css
+          test -f assets/frontend.js
+          grep -q "Version:     1.5.0" rar-woo-order-workflow-notify.php
