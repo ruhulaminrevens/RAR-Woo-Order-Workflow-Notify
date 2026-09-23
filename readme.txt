@@ -4,7 +4,7 @@ Tags: woocommerce, order status, email notification, workflow, returned order
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 
 Professional WooCommerce order workflow and notification system.
@@ -28,6 +28,12 @@ Highlights:
 * Completed email includes per-product Rate & Review buttons.
 * No extra RAR workflow email call during checkout/order placement.
 * Success/failure mail results written to order notes; failures logged under WooCommerce log source `rar-wow`.
+* Customer-facing Order Status panel on My Account → View Order and verified Order Tracking results.
+* Four-stage progress display plus customer-safe historical order timeline.
+* Historical status reconstruction without exposing private admin note text.
+* Customer-visible notes, courier/ETA/tracking summary and RAR advance-payment verification events.
+* Separate settings for status panel, history and public-note visibility.
+* Responsive frontend UI with duplicate native tracking updates suppressed when the unified timeline is active.
 
 == Installation ==
 
@@ -38,6 +44,9 @@ Highlights:
 5. Disable/remove old workflow snippets only after one test order passes.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Customer Order Experience: View Order + Order Tracking status/progress panel, full customer-safe history, historical status reconstruction, payment/courier summary, privacy-aware note handling, responsive frontend UI and production validation.
 
 = 1.4.0 =
 Final production polish: smaller consistent SVG actions, instant workflow admin alerts for Cancelled/Returned/manual Processing recovery, reliable admin recipient resolution, mail success/failure notes/logging, and checkout-safe notification architecture.
