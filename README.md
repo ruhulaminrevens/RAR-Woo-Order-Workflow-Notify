@@ -6,7 +6,7 @@ Production-focused WooCommerce order workflow and notification plugin.
 
 ### [⬇️ Download Latest Installable ZIP](https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/main.zip)
 
-### [📦 Download Stable v1.4.0 ZIP](https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/v1.4.0.zip)
+### [📦 Download Stable v1.5.0 ZIP](https://github.com/ruhulaminrevens/RAR-Woo-Order-Workflow-Notify/archive/refs/heads/v1.5.0.zip)
 
 **Install:** WordPress → Plugins → Add New → Upload Plugin → choose the downloaded ZIP → Install Now → Activate.
 
@@ -20,6 +20,21 @@ Exception/recovery paths:
 - `Cancelled → Processing`
 - `Completed → Returned`
 - `Returned → Processing`
+
+## Customer Order Status & History
+
+v1.5.0 adds a production customer-facing order experience to both WooCommerce surfaces:
+
+- **My Account → View Order** — the email **View Order / অর্ডার দেখুন** button now leads to an order page with a clear current-status badge, progress bar and full order history.
+- **Order Tracking** — after WooCommerce verifies the Order ID + billing email, the same order-status/history panel appears below the tracking result.
+- **Historical orders** — trusted WooCommerce status-change records are reconstructed into a customer-safe timeline, so older orders can show status history without exposing private note text.
+- **Public order notes** — notes explicitly marked visible to the customer are merged into the timeline.
+- **Advance payment** — RAR advance-payment submission and manual verification are shown without exposing payer reference, Transaction ID, PIN/OTP or internal admin details.
+- **Courier summary** — courier, ETA and tracking details are shown when available.
+- **Privacy by design** — private admin notes, email logs and internal operational notes are never printed to customers.
+- **No checkout slowdown** — the feature performs history reconstruction when the customer views an order; it does not add a remote call or extra email to the Place Order request.
+
+The display can be controlled from **WooCommerce → Order Workflow** using separate toggles for the customer status panel, order history and customer-visible notes.
 
 ## Notifications
 
@@ -76,4 +91,6 @@ Compact SVG actions are status-aware and only expose allowed transitions.
 
 ## Version
 
-**1.4.0 — 2026-09-20**
+**1.5.0 — 2026-09-23**
+
+Customer Order Experience release: professional View Order + Order Tracking status panel, customer-safe historical timeline, payment/courier summary, responsive frontend UI, and privacy-aware history reconstruction.
