@@ -1,0 +1,103 @@
+/*
+ * RAR Documents — shared PDF stylesheet (rendered by mPDF).
+ * Override: copy to yourtheme/rar-wow/documents/style.css
+ * __ACCENT__ is replaced with the accent colour from settings.
+ */
+body { font-family: hindsiliguri; font-size: 9.5pt; color: #1e272c; line-height: 1.35; }
+table { border-collapse: collapse; width: 100%; }
+td, th { vertical-align: top; }
+.muted { color: #66747c; }
+.small { font-size: 8pt; }
+.xsmall { font-size: 7pt; }
+.strong { font-weight: bold; }
+.right { text-align: right; }
+.center { text-align: center; }
+.accent { color: __ACCENT__; }
+
+/* Header */
+.head td { padding: 0; }
+.brand-name { font-size: 17pt; font-weight: bold; color: #18242a; line-height: 1.1; }
+.shop-lines { font-size: 8.3pt; color: #4f5d65; line-height: 1.45; padding-top: 3pt; }
+.doc-title { font-size: 21pt; font-weight: bold; color: __ACCENT__; letter-spacing: 1.5pt; text-align: right; line-height: 1; }
+.doc-subtitle { font-size: 10pt; color: #6b7a82; text-align: right; padding-top: 2pt; }
+.meta { width: auto; margin-top: 6pt; }
+.meta td { padding: 1.6pt 0 1.6pt 10pt; font-size: 8.6pt; text-align: right; }
+.meta td.k { color: #6b7a82; }
+.meta td.v { font-weight: bold; color: #1e272c; }
+.bar { height: 2.2pt; background: __ACCENT__; margin: 9pt 0 10pt; }
+
+/* Parties */
+.parties td.col { padding-right: 12pt; }
+.label-cap { font-size: 7.4pt; letter-spacing: 1pt; text-transform: uppercase; color: __ACCENT__; font-weight: bold; padding-bottom: 3pt; }
+.party-name { font-size: 10.5pt; font-weight: bold; }
+.party { font-size: 8.8pt; line-height: 1.45; color: #2c383e; }
+.qr-cell { text-align: right; width: 26mm; }
+.qr-cap { font-size: 6.6pt; color: #7a878e; text-align: center; }
+
+/* Items */
+.items { margin-top: 12pt; }
+.items thead th { background: __ACCENT__; color: #ffffff; font-size: 8.2pt; font-weight: bold; padding: 5pt 5pt; text-align: left; }
+.items thead th.num, .items td.num { text-align: right; }
+.items thead th.qty, .items td.qty { text-align: center; }
+.items td { padding: 5pt 5pt; border-bottom: 0.6pt solid #e2e8eb; font-size: 8.8pt; }
+.items tr.alt td { background: #f7faf9; }
+.items .item-name { font-weight: bold; color: #1e272c; }
+.items .item-meta { font-size: 7.6pt; color: #66747c; }
+.items .refunded { font-size: 7.4pt; color: #c0392b; }
+.items img.thumb { width: 11mm; height: 11mm; }
+.items td.idx { color: #8a979e; width: 6mm; }
+
+/* Summary */
+.summary { margin-top: 10pt; }
+.summary td.left { padding-right: 14pt; width: 56%; }
+table.box { border: 0.6pt solid #dfe6e9; background: #fafcfc; margin-bottom: 7pt; }
+table.box td { padding: 5pt 8pt; font-size: 8.8pt; }
+.box-cap { font-size: 7.2pt; letter-spacing: 0.8pt; text-transform: uppercase; color: #6b7a82; font-weight: bold; padding-bottom: 2pt; }
+.words { font-size: 8.8pt; font-weight: bold; color: #26333a; }
+.totals td { padding: 3.4pt 4pt; font-size: 8.9pt; }
+.totals td.k { color: #4f5d65; }
+.totals td.v { text-align: right; }
+.totals tr.grand td { border-top: 1pt solid __ACCENT__; padding-top: 5pt; font-size: 11.5pt; font-weight: bold; color: #18242a; }
+.totals tr.pay td { font-size: 8.6pt; color: #4f5d65; }
+.totals tr.collect td { background: #fff4e5; font-weight: bold; color: #9a4f00; font-size: 10pt; }
+table.stamp { margin-top: 8pt; border: 1.4pt solid __ACCENT__; }
+table.stamp td { text-align: center; font-weight: bold; font-size: 11.5pt; padding: 5pt 4pt 1pt; color: __ACCENT__; }
+table.stamp td.sub { font-size: 8pt; font-weight: normal; padding: 0 4pt 5pt; }
+table.stamp.due { border-color: #d9822b; }
+table.stamp.due td { color: #b35f00; }
+
+/* Signature & footer */
+.sign { margin-top: 26pt; }
+.sign td { width: 50%; font-size: 8pt; color: #5d6b72; }
+.sign td.sig { border-top: 0.7pt solid #9aa6ac; padding-top: 3pt; width: 38%; }
+.sign td.gap { width: 24%; border: none; }
+.terms { margin-top: 10pt; font-size: 7.8pt; color: #66747c; line-height: 1.45; }
+.footer { border-top: 0.6pt solid #e2e8eb; padding-top: 3pt; font-size: 7.4pt; color: #7a878e; }
+
+/* Packing slip */
+.ship-to-big .party-name { font-size: 13pt; }
+.ship-to-big .party { font-size: 10pt; }
+.phone-big { font-size: 12pt; font-weight: bold; padding-top: 3pt; }
+.check { width: 4.2mm; height: 4.2mm; border: 0.8pt solid #7a878e; }
+.items td.check-cell { width: 8mm; text-align: center; }
+.handover { margin-top: 26pt; }
+.handover td { font-size: 8pt; color: #5d6b72; }
+.handover td.sig { border-top: 0.7pt solid #9aa6ac; padding-top: 3pt; width: 30%; }
+.handover td.gap { width: 5%; }
+
+/* Delivery label */
+.lbl { font-size: 9pt; }
+.lbl .lbl-head td { border-bottom: 1pt solid #1e272c; padding-bottom: 2pt; }
+.lbl .lbl-shop { font-size: 11pt; font-weight: bold; }
+.lbl .lbl-title { font-size: 7.5pt; letter-spacing: 1pt; text-align: right; font-weight: bold; }
+.lbl .to-cap { font-size: 7.5pt; letter-spacing: 1pt; font-weight: bold; color: #444; padding-top: 5pt; }
+.lbl .to-name { font-size: 15pt; font-weight: bold; line-height: 1.15; }
+.lbl .to-phone { font-size: 16pt; font-weight: bold; padding: 1pt 0 2pt; }
+.lbl .to-addr { font-size: 10.5pt; line-height: 1.35; }
+.lbl .cod { border: 1.8pt solid #111; text-align: center; padding: 4pt; margin-top: 6pt; }
+.lbl .cod-cap { font-size: 8pt; letter-spacing: 1pt; font-weight: bold; }
+.lbl .cod-amt { font-size: 23pt; font-weight: bold; line-height: 1.1; }
+.lbl .grid td { border: 0.6pt solid #555; padding: 3pt 4pt; font-size: 9pt; }
+.lbl .grid td.k { font-weight: bold; width: 26%; background: #f1f1f1; }
+.lbl .from { font-size: 8pt; color: #333; line-height: 1.35; }
+.lbl .note { font-size: 8.5pt; border: 0.6pt dashed #777; padding: 3pt 4pt; margin-top: 4pt; }

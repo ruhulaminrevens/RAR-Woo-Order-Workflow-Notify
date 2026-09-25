@@ -103,3 +103,70 @@
         margin:1px !important;
     }
 }
+
+/* ===== v2.0 Documents Center ===== */
+.rar-wow-version{font-size:12px;font-weight:600;color:#0b8a62;background:#e8f6f0;border:1px solid #bfe6d5;border-radius:999px;padding:2px 9px;vertical-align:middle;margin-left:6px}
+.rar-wow-tabs{margin:14px 0 4px}
+.rar-wow-settings .rar-wow-card h2{margin-top:0;font-size:15px}
+.rar-wow-multicheck{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 16px;max-width:900px}
+.rar-wow-multicheck label{line-height:1.6}
+.rar-wow-media{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rar-wow-media-preview{max-height:56px;max-width:220px;border:1px solid #dcdcde;border-radius:6px;padding:4px;background:#fff}
+.rar-wow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:0 18px;max-width:1300px}
+.rar-wow-grid .rar-wow-card{max-width:none}
+.rar-wow-inline-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rar-wow-syscheck td{padding:6px 10px}
+.rar-wow-ok{color:#0b8a62;font-weight:700}.rar-wow-bad{color:#d63638;font-weight:700}
+.rar-wow-migrate{max-width:1300px!important}
+.rar-wow-steps li{margin:12px 0;line-height:1.7}
+.rar-wow-steps .button{margin-left:6px}
+
+/* Orders list column */
+.column-rar_wow_docs{width:128px}
+.rar-wow-docs-cell{display:flex;flex-direction:column;gap:4px}
+.rar-wow-inv-no{font-weight:600;font-size:12px;color:#1d2327}
+.rar-wow-inv-no.is-empty{color:#8c8f94;font-weight:400}
+.rar-wow-doc-buttons{display:flex;gap:4px}
+.rar-wow-doc-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:26px;border:1px solid #c3c4c7;border-radius:7px;background:#fff;color:#50575e;text-decoration:none;position:relative;transition:transform .12s ease,box-shadow .12s ease}
+.rar-wow-doc-btn:hover{color:#0b8a62;border-color:#0b8a62;transform:translateY(-1px);box-shadow:0 2px 6px rgba(15,23,42,.1)}
+.rar-wow-doc-btn.is-printed{border-color:#9fd8c1;background:#f0faf5;color:#0b8a62}
+.rar-wow-doc-btn.is-printed:after{content:"";position:absolute;top:-3px;right:-3px;width:7px;height:7px;border-radius:50%;background:#0b8a62;border:1.5px solid #fff}
+
+/* Meta box */
+.rar-wow-metabox .rar-wow-mb-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed #e2e4e7}
+.rar-wow-metabox .rar-wow-mb-row span{color:#646970}
+.rar-wow-mb-hint{color:#646970;font-size:12px;margin:6px 0}
+.rar-wow-mb-edit{margin:8px 0}
+.rar-wow-mb-edit summary{cursor:pointer;color:#2271b1}
+.rar-wow-mb-docs{margin:10px 0;border-top:1px solid #e2e4e7;padding-top:8px}
+.rar-wow-mb-doc{display:flex;align-items:center;gap:6px;padding:4px 0}
+.rar-wow-mb-doc-icon{color:#0b8a62;display:inline-flex}
+.rar-wow-mb-doc-name{flex:1;line-height:1.25}
+.rar-wow-mb-doc-name small{display:block;color:#8c8f94;font-size:11px}
+.rar-wow-mb-actions{display:flex;flex-direction:column;gap:8px;border-top:1px solid #e2e4e7;padding-top:10px}
+.rar-wow-mb-actions .button{text-align:center}
+
+/* Register */
+.rar-wow-register-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.rar-wow-quick{margin-left:8px}
+.rar-wow-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:12px 0}
+.rar-wow-kpi{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:10px 12px}
+.rar-wow-kpi span{display:block;color:#646970;font-size:12px}
+.rar-wow-kpi strong{font-size:17px}
+.rar-wow-kpi.is-accent{border-color:#0b8a62;background:#f0faf5}
+.rar-wow-chip{display:inline-block;background:#f0f0f1;border-radius:999px;padding:1px 8px;margin:2px 4px 2px 0;font-size:11px}
+.rar-wow-chip.is-void{background:#fcf0f1;color:#b32d2e}
+.rar-wow-register-table th.num,.rar-wow-register-table td.num{text-align:right;white-space:nowrap}
+.rar-wow-register-table tr.is-void td{opacity:.6}
+
+/* Dashboard pulse */
+.rar-wow-pulse-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.rar-wow-pulse-cell{display:block;text-align:center;border:1px solid #e2e4e7;border-radius:8px;padding:8px 4px;text-decoration:none;color:#1d2327}
+.rar-wow-pulse-cell strong{display:block;font-size:20px;line-height:1.2}
+.rar-wow-pulse-cell span{font-size:11px;color:#646970}
+.rar-wow-pulse-confirmed{border-color:#ddd6fe;background:#f5f3ff}
+.rar-wow-pulse-shipped{border-color:#fed7aa;background:#fff7ed}
+.rar-wow-pulse-processing{border-color:#bfdbfe;background:#eff6ff}
+.rar-wow-pulse-returned{border-color:#fde68a;background:#fffbeb}
+.rar-wow-pulse-actions .button{margin:4px 4px 0 0}
+@media (max-width:782px){.rar-wow-pulse-grid{grid-template-columns:repeat(3,1fr)}.rar-wow-grid{grid-template-columns:1fr}}

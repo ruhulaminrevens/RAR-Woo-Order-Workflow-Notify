@@ -27,9 +27,21 @@
         });
     }
 
-    if(document.readyState==='loading'){
-        document.addEventListener('DOMContentLoaded',hideNativeTrackingNotes);
-    }else{
+    function openInvoicesInNewTab(){
+        document.querySelectorAll('a.rar_invoice, a.rar-wow-doc-link').forEach(function(link){
+            link.setAttribute('target','_blank');
+            link.setAttribute('rel','noopener');
+        });
+    }
+
+    function init(){
         hideNativeTrackingNotes();
+        openInvoicesInNewTab();
+    }
+
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',init);
+    }else{
+        init();
     }
 })();

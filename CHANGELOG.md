@@ -1,5 +1,42 @@
 # Changelog
 
+## 2.0.0 — 2026-09-25 — Documents Center
+
+Replaces **PDF Invoices & Packing Slips for WooCommerce**.
+
+**Documents**
+- Added PDF **Invoice**, **Packing Slip** and new **Courier Delivery Label** (100×150 / 100×100 / A6 / 75×100 mm).
+- Correct Bangla text shaping via bundled, namespace-isolated mPDF 8.3 + Hind Siliguri font (DejaVu fallback for symbols).
+- Amount in words (English "Taka … Only" / Bangla "… টাকা মাত্র", lakh/crore system), PAID / CASH ON DELIVERY stamp, verified-advance deduction and amount to collect, refunds with Net total, notes, terms, signature lines, page numbers, Code-128 barcode, QR code.
+- Template overrides in `yourtheme/rar-wow/documents/` and developer filters/actions.
+
+**Invoice numbering**
+- New Invoice Register table (`{prefix}rar_wow_invoices`) reserving numbers atomically (unique series+number, retry on collision, per-order lock) — no duplicates under parallel requests.
+- Prefix/suffix placeholders, padding, yearly reset, invoice date source, editable next number (cannot go below last issued).
+- Automatic invoice number on chosen statuses (default: Confirmed); disable for free orders / chosen statuses.
+- Edit number/date/notes on the order screen (logged), void with audit trail (numbers never reused).
+
+**Delivery & access**
+- Email attachments for any WooCommerce email and all RAR workflow emails; "Download Invoice" button in RAR customer emails.
+- Admin: Documents column, single/bulk printing (merged PDF in new tab), bulk "Create invoice numbers", order-screen box with Create / Email invoice / Copy link / Void and print history; search orders by invoice number.
+- Customer: "Invoice (PDF)" in My Account orders and in the Order Status panel; secure order-key guest links; configurable statuses and "only when created" rule.
+- Public invoice authenticity verification page via QR (tamper-proof HMAC token, masked customer name).
+
+**Operations**
+- WooCommerce → Invoice Register with date filters, search, KPIs and UTF-8 CSV export (formula-injection safe).
+- Dashboard widget "Order Workflow Pulse" with one-click printing for confirmed orders.
+- Bulk actions: Change status to Confirmed / Shipped / Returned.
+- Admin workflow alert email now includes "Open order in admin".
+- Tabbed settings: Workflow & Notifications · Documents & Layout · Invoice Numbers & Emails · Tools, Preview & Migration.
+
+**Migration & compatibility**
+- One-click import of the old plugin's settings and all invoice numbers (unchanged, duplicates preserved separately); numbering continues after the highest old number. Old invoices remain readable without import.
+- Optional compatibility meta `_wcpdf_invoice_number` / `_wcpdf_invoice_date` for tools built for the old plugin.
+- Notice while the old plugin is still active.
+- HPOS and legacy order storage; PHP 7.4–8.4; WordPress 7.1 / WooCommerce 11.1 tested.
+- Automatic DB install/upgrade on first load after "Upload → Replace current" updates.
+- Uninstall removes only temp PDFs/font cache; settings, order meta and register are preserved.
+
 ## 1.5.0 — 2026-09-23
 
 - Added a professional customer-facing **Order Status** panel to My Account → View Order and verified WooCommerce Order Tracking results.

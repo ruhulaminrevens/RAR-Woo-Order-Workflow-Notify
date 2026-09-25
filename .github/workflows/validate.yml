@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ["7.4", "8.3"]
+        php: ["7.4", "8.1", "8.4"]
 
     steps:
       - name: Checkout
@@ -29,7 +29,7 @@ jobs:
 
       - name: PHP syntax
         run: |
-          find . -type f -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+          find . -type f -name "*.php" -not -path "./vendor/*" -not -path "./lib/*" -print0 | xargs -0 -n1 php -l
 
       - name: JavaScript syntax
         run: |
@@ -44,4 +44,22 @@ jobs:
           test -f assets/admin.css
           test -f assets/frontend.css
           test -f assets/frontend.js
-          grep -q "Version:     1.5.0" rar-woo-order-workflow-notify.php
+          test -f assets/admin.js
+          test -f includes/class-rar-wow-documents.php
+          test -f includes/class-rar-wow-documents-admin.php
+          test -f includes/class-rar-wow-register.php
+          test -f includes/class-rar-wow-pdf.php
+          test -f includes/class-rar-wow-amount-words.php
+          test -f templates/documents/invoice.php
+          test -f templates/documents/packing-slip.php
+          test -f templates/documents/label.php
+          test -f templates/documents/style.css
+          test -f lib/mpdf/src/Mpdf.php
+          test -f lib/fonts/HindSiliguri-Regular.ttf
+          grep -q "Version:     2.0.0" rar-woo-order-workflow-notify.php
+          grep -q "define( 'RAR_WOW_VERSION', '2.0.0' );" rar-woo-order-workflow-notify.php
+
+      - name: Vendor library syntax (sample)
+        run: |
+          php -l lib/mpdf/src/Mpdf.php
+          php -l lib/mpdf-qrcode/src/QrCode.php

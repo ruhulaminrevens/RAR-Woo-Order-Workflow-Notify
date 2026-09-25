@@ -37,6 +37,47 @@ final class RAR_WOW_Plugin {
         add_action( 'admin_menu', array( $this, 'add_settings_page' ), 90 );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_filter( 'plugin_action_links_' . plugin_basename( RAR_WOW_FILE ), array( $this, 'plugin_action_links' ) );
+
+        // Bulk "Change status to Confirmed / Shipped / Returned" (WooCommerce core handles mark_* for any registered status).
+        add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_bulk_status_actions' ), 20 );
+        add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'add_bulk_status_actions' ), 20 );
+        add_action( 'admin_notices', array( $this, 'workflow_admin_notice' ) );
+    }
+
+    public function add_bulk_status_actions( $actions ) {
+        $new = array();
+
+        foreach ( $actions as $key => $label ) {
+            $new[ $key ] = $label;
+
+            if ( 'mark_processing' === $key ) {
+                $new['mark_confirmed'] = 'Change status to Confirmed (emails customer)';
+                $new['mark_shipped']   = 'Change status to Shipped (emails customer)';
+            }
+
+            if ( 'mark_completed' === $key ) {
+                $new['mark_returned'] = 'Change status to Returned (notifies customer & admin)';
+            }
+        }
+
+        foreach ( array( 'mark_confirmed' => 'Confirmed', 'mark_shipped' => 'Shipped', 'mark_returned' => 'Returned' ) as $key => $label ) {
+            if ( ! isset( $new[ $key ] ) ) {
+                $new[ $key ] = 'Change status to ' . $label;
+            }
+        }
+
+        return $new;
+    }
+
+    public function workflow_admin_notice() {
+        if ( empty( $_GET['rar_wow_updated'] ) || ! current_user_can( 'edit_shop_orders' ) ) { // phpcs:ignore
+            return;
+        }
+
+        $status = sanitize_key( wp_unslash( $_GET['rar_wow_updated'] ) ); // phpcs:ignore
+        $label  = wc_get_order_status_name( $status );
+
+        echo '<div class="notice notice-success is-dismissible"><p><strong>RAR Workflow:</strong> order moved to <strong>' . esc_html( $label ) . '</strong>. Notifications were processed — see the order notes for mail delivery results.</p></div>';
     }
 
     public function register_statuses() {
@@ -1102,7 +1143,7 @@ final class RAR_WOW_Plugin {
         return min( 3, max( 0, absint( $stage ) ) );
     }
 
-    private function courier_eta( WC_Order $order ) {
+    public function courier_eta( WC_Order $order ) {
         foreach ( $order->get_items( 'shipping' ) as $shipping_item ) {
             foreach ( array( 'rwsc_eta', '_rwsc_eta' ) as $key ) {
                 $eta = trim( (string) $shipping_item->get_meta( $key, true ) );
@@ -1252,9 +1293,19 @@ final class RAR_WOW_Plugin {
                     </p>
                 </div>
 
-                <span class="rar-wow-current-badge <?php echo $exception ? 'is-exception' : ''; ?>">
-                    <?php echo esc_html( wc_get_order_status_name( $status ) ); ?>
-                </span>
+                <div class="rar-wow-head-actions">
+                    <span class="rar-wow-current-badge <?php echo $exception ? 'is-exception' : ''; ?>">
+                        <?php echo esc_html( wc_get_order_status_name( $status ) ); ?>
+                    </span>
+                    <?php if ( class_exists( 'RAR_WOW_Documents' ) && RAR_WOW_Documents::customer_can_download( $order, 'invoice' ) ) : ?>
+                        <a
+                            class="rar-wow-invoice-btn rar-wow-doc-link"
+                            href="<?php echo esc_url( RAR_WOW_Documents::customer_url_for( $order, 'invoice' ) ); ?>"
+                            target="_blank"
+                            rel="noopener"
+                        >&#8595; Invoice (PDF)</a>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <div class="rar-wow-progress" role="list" aria-label="Order progress">
@@ -1472,11 +1523,16 @@ final class RAR_WOW_Plugin {
             )
         );
 
+        $attachments = class_exists( 'RAR_WOW_Documents' )
+            ? RAR_WOW_Documents::attachments_for( $order, 'rar_admin' )
+            : array();
+
         $sent = wc_mail(
             $to,
             $subject,
             $body,
-            array( 'Content-Type: text/html; charset=UTF-8' )
+            array( 'Content-Type: text/html; charset=UTF-8' ),
+            $attachments
         );
 
         $order->add_order_note(
@@ -1540,17 +1596,22 @@ final class RAR_WOW_Plugin {
             $config
         );
 
+        $attachments = class_exists( 'RAR_WOW_Documents' )
+            ? RAR_WOW_Documents::attachments_for( $order, 'rar_' . $type )
+            : array();
+
         $sent = wc_mail(
             $to,
             $subject,
             $body,
-            array( 'Content-Type: text/html; charset=UTF-8' )
+            array( 'Content-Type: text/html; charset=UTF-8' ),
+            $attachments
         );
 
         $order->add_order_note(
             $sent
                 ? sprintf(
-                    'RAR workflow customer email accepted by the mailer for status: %s.',
+                    'RAR workflow customer email accepted by the mailer for status: %s.' . ( $attachments ? ' Attached: ' . implode( ', ', array_map( 'basename', $attachments ) ) . '.' : '' ),
                     ucfirst( $type )
                 )
                 : sprintf(
@@ -1796,6 +1857,20 @@ final class RAR_WOW_Plugin {
                                 href="<?php echo esc_url( $view_url ); ?>"
                                 style="display:inline-block;background:#0b8a62;color:#fff;text-decoration:none;font-weight:700;padding:10px 15px;border-radius:7px;"
                             >View Order / অর্ডার দেখুন</a>
+                            <?php
+                            if ( class_exists( 'RAR_WOW_Documents' ) && empty( $config['hide_doc_button'] ) ) {
+                                echo RAR_WOW_Documents::email_button_html( $order ); // phpcs:ignore -- escaped inside.
+                            }
+                            ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <?php if ( 'admin' === $audience ) : ?>
+                        <p style="margin:18px 0;">
+                            <a
+                                href="<?php echo esc_url( $order->get_edit_order_url() ); ?>"
+                                style="display:inline-block;background:#0b8a62;color:#fff;text-decoration:none;font-weight:700;padding:10px 15px;border-radius:7px;"
+                            >Open order in admin</a>
                         </p>
                     <?php endif; ?>
 
@@ -1859,7 +1934,7 @@ final class RAR_WOW_Plugin {
         return (string) ob_get_clean();
     }
 
-    private function courier_label( WC_Order $order ) {
+    public function courier_label( WC_Order $order ) {
         $courier = '';
 
         foreach (
@@ -1933,7 +2008,7 @@ final class RAR_WOW_Plugin {
         return '';
     }
 
-    private function tracking_value( WC_Order $order ) {
+    public function tracking_value( WC_Order $order ) {
         foreach (
             array(
                 '_nabiad_tracking_id',
@@ -2050,14 +2125,43 @@ final class RAR_WOW_Plugin {
         }
 
         $settings = $this->settings();
+        $tabs     = array(
+            'workflow'  => 'Workflow & Notifications',
+            'documents' => 'Documents & Layout',
+            'numbering' => 'Invoice Numbers & Emails',
+            'tools'     => 'Tools, Preview & Migration',
+        );
+        $tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'workflow'; // phpcs:ignore
+        $tab = isset( $tabs[ $tab ] ) ? $tab : 'workflow';
         ?>
         <div class="wrap rar-wow-settings">
-            <h1>RAR Woo Order Workflow &amp; Notify</h1>
+            <h1>RAR Woo Order Workflow &amp; Notify <span class="rar-wow-version">v<?php echo esc_html( RAR_WOW_VERSION ); ?></span></h1>
 
             <p class="description">
                 Production workflow: Processing → Confirmed → Shipped → Completed,
-                with Cancelled/Returned recovery and transactional notifications.
+                with Cancelled/Returned recovery, transactional notifications and the built-in Documents Center
+                (PDF invoices, packing slips, delivery labels).
             </p>
+
+            <nav class="nav-tab-wrapper rar-wow-tabs">
+                <?php foreach ( $tabs as $slug => $label ) : ?>
+                    <a
+                        href="<?php echo esc_url( admin_url( 'admin.php?page=rar-wow-workflow&tab=' . $slug ) ); ?>"
+                        class="nav-tab <?php echo $slug === $tab ? 'nav-tab-active' : ''; ?>"
+                    ><?php echo esc_html( $label ); ?></a>
+                <?php endforeach; ?>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=rar-wow-register' ) ); ?>" class="nav-tab">Invoice Register ↗</a>
+            </nav>
+
+            <?php settings_errors(); ?>
+
+            <?php
+            if ( 'workflow' !== $tab && class_exists( 'RAR_WOW_Documents_Admin' ) ) {
+                RAR_WOW_Documents_Admin::instance()->render_tab( $tab );
+                echo '</div>';
+                return;
+            }
+            ?>
 
             <div class="rar-wow-card">
                 <form method="post" action="options.php">
